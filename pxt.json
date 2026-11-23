@@ -1,0 +1,13 @@
+{
+  "name": "HU_connect",
+  "version": "1.1.0",
+  "license": "MIT",
+  "description": "HU connect blocks for micro:bit and Grove UART WiFi V2 WebSocket communication.",
+  "files": [
+    "main.ts",
+    "_locales/ja/HU_connect-strings.json"
+  ],
+  "dependencies": {
+    "core": "*"
+  }
+}
