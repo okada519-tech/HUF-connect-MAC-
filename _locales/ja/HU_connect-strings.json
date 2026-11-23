@@ -13,3 +13,4 @@
   "HUConnect.RequestWiFiModuleInfo|block": "Wi-Fiモジュールに問い合わせる コマンド %command",
   "HUConnect.WiFiModuleResponse|block": "Wi-Fiモジュールの応答"
 }
+
