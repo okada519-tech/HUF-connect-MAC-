@@ -387,24 +387,15 @@ namespace HUConnect {
         startWiFiMonitor();
     }
 
-    // Last raw response from the Wi-Fi module diagnostic command.
-    let wifiModuleResponse = "";
-
-    /** Send a diagnostic command to the Wi-Fi module and store its response. */
-    //% blockId=HUConnect_RequestWiFiModuleInfo
+    /** Send a diagnostic command and return the Wi-Fi module response as text.
+     * Supported commands depend on the firmware installed on the module.
+     */
+    //% blockId=HUConnect_WiFiModuleCommand
     //% block="Wi-Fiモジュールに問い合わせる コマンド %command"
     //% command.defl="wifi_mac"
     //% weight=76
-    export function RequestWiFiModuleInfo(command: string): void {
-        wifiModuleResponse = GroveWiFi.WiFiModuleCommand(command);
-    }
-
-    /** Return the response saved by the previous diagnostic command. */
-    //% blockId=HUConnect_WiFiModuleResponse
-    //% block="Wi-Fiモジュールの応答"
-    //% weight=75
-    export function WiFiModuleResponse(): string {
-        return wifiModuleResponse;
+    export function WiFiModuleCommand(command: string): string {
+        return GroveWiFi.WiFiModuleCommand(command);
     }
 
     /** Connect to a Wi-Fi access point. */
