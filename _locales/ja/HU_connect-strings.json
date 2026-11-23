@@ -10,7 +10,5 @@
   "HUConnect.SendCustomWebSocketNumber|block": "WebSocketで数値を送信 %value",
   "HUConnect.CustomWebSocketDiagnostic|block": "カスタムWebSocketの応答を取得 URL %url",
   "HUConnect.DisconnectCustomWebSocket|block": "カスタムWebSocketを切断",
-  "HUConnect.RequestWiFiModuleInfo|block": "Wi-Fiモジュールに問い合わせる コマンド %command",
-  "HUConnect.WiFiModuleResponse|block": "Wi-Fiモジュールの応答"
+  "HUConnect.WiFiModuleCommand|block": "Wi-Fiモジュールに問い合わせる コマンド %command"
 }
-
