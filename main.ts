@@ -387,13 +387,24 @@ namespace HUConnect {
         startWiFiMonitor();
     }
 
-    /** Experimental firmware diagnostic. The default command name is unverified. */
-    //% blockId=HUConnect_GetWiFiModuleMAC
-    //% block="Wi-FiモジュールのMACアドレスを問い合わせる 応答コマンド %command"
+    // Last raw response from the Wi-Fi module diagnostic command.
+    let wifiModuleResponse = "";
+
+    /** Send a diagnostic command to the Wi-Fi module and store its response. */
+    //% blockId=HUConnect_RequestWiFiModuleInfo
+    //% block="Wi-Fiモジュールに問い合わせる コマンド %command"
     //% command.defl="wifi_mac"
+    //% weight=76
+    export function RequestWiFiModuleInfo(command: string): void {
+        wifiModuleResponse = GroveWiFi.WiFiModuleCommand(command);
+    }
+
+    /** Return the response saved by the previous diagnostic command. */
+    //% blockId=HUConnect_WiFiModuleResponse
+    //% block="Wi-Fiモジュールの応答"
     //% weight=75
-    export function GetWiFiModuleMAC(command: string): string {
-        return GroveWiFi.WiFiModuleCommand(command);
+    export function WiFiModuleResponse(): string {
+        return wifiModuleResponse;
     }
 
     /** Connect to a Wi-Fi access point. */
