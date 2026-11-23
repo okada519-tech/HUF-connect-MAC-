@@ -476,5 +476,4 @@ namespace HUConnect {
     export function DisconnectCustomWebSocket(): void {
         GroveWiFi.WsClose();
     }
-
 }
