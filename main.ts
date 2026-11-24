@@ -462,6 +462,10 @@ namespace HUConnect {
     //% weight=69
     export function ConnectedCustomWebSocketSuccess(handler: () => void): void {
         customWebSocketConnectedHandler = handler;
+
+        if (customWebSocketIsConnected && customWebSocketConnectedHandler) {
+            customWebSocketConnectedHandler();
+        }
     }
 
     /** Send a text message over the established WebSocket connection. */
