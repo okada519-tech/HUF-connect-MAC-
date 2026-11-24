@@ -1,3 +1,4 @@
+
 enum HUConnectConnector {
     //% block="P0/P14"
     P00P14,
@@ -14,22 +15,22 @@ enum HUConnectConnector {
 //% color=#4c97fe weight=1 icon="\u21cc" advanced=true
 namespace HUConnect {
 
-    const RX_BUFFER_SIZE = 100;                 // UART受信バッファサイズ
-    const START_CHAR = '*';                     // UART開始文字
-    const END_CHAR = '\n';                      // UART終了文字
+    const RX_BUFFER_SIZE = 100;
+    const START_CHAR = '*';
+    const END_CHAR = '\n';
 
-    const POLLING_INTERVAL = 1;                 // ポーリング周期[msec.]
+    const POLLING_INTERVAL = 1;
 
-    const GROVE_WIFI_GET_TOKEN_TIMEOUT = 30000; // GroveWiFiトークン取得タイムアウト[msec.]
-    const GROVE_WIFI_READ_TIMEOUT = 60000;      // GroveWiFi受信タイムアウト[msec.]
+    const GROVE_WIFI_GET_TOKEN_TIMEOUT = 30000;
+    const GROVE_WIFI_READ_TIMEOUT = 60000;
 
-    const DO_WORK_INTERVAL = 500;               // バックグラウンド実行周期[msec.]
-    const WIFI_CONNECT_TIMEOUT = 30000;         // WiFi接続タイムアウト[msec.]
+    const DO_WORK_INTERVAL = 500;
+    const WIFI_CONNECT_TIMEOUT = 30000;
 
-    const SERVER_URI = "wss://blocks.softbankrobotics.com/ws";  // サーバーURI
-    const SERVER_GET_TOKEN_TIMEOUT = 30000;     // サーバー通信トークン取得タイムアウト[msec.]
-    const SERVER_MESSAGE_TIMEOUT = 5000;        // サーバーメッセージ受信タイムアウト[msec.]
-    const MIN_SEND_VALUE_INTERVAL = 1000;       // データ送信最小周期[msec.]
+    const SERVER_URI = "wss://blocks.softbankrobotics.com/ws";
+    const SERVER_GET_TOKEN_TIMEOUT = 30000;
+    const SERVER_MESSAGE_TIMEOUT = 5000;
+    const MIN_SEND_VALUE_INTERVAL = 1000;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Helper functions
@@ -166,7 +167,7 @@ namespace HUConnect {
     }
 
     ////////////////////////////////////////////////////////////////////////////////
-    // SerialInterface
+    // GroveWiFi
 
     namespace GroveWiFi {
 
@@ -186,8 +187,8 @@ namespace HUConnect {
             Token = true;
         }
 
-        /** Send a firmware command and return its raw response.
-         * This is a diagnostic interface; supported command names depend on the installed firmware.
+        /**
+         * Send a firmware command and return its raw response.
          */
         export function WiFiModuleCommand(command: string): string {
             GetToken();
@@ -266,7 +267,6 @@ namespace HUConnect {
 
             if (res.length !== 1) control.panic(10);
             if (res[0] === "connect_error") {
-                ReturnToken();
                 return false;
             }
             if (res[0] !== "ok") control.panic(11);
@@ -274,7 +274,7 @@ namespace HUConnect {
             return true;
         }
 
-        // Diagnostic helper: return the raw response to ws_connect.
+        // Diagnostic helper
         export function WsDiagnostic(url: string): string {
             GetToken();
             SerialInterface.PreRead();
@@ -336,7 +336,9 @@ namespace HUConnect {
 
     }
 
+    ////////////////////////////////////////////////////////////////////////////////
     // Wi-Fi event handlers and connection state
+
     let wifiConnectedHandler: () => void;
     let wifiFailedHandler: () => void;
     let wifiDisconnectedHandler: () => void;
@@ -344,6 +346,11 @@ namespace HUConnect {
     let wifiWasConnected = false;
     let wifiConnecting = false;
     let wifiConnectStartedAt = 0;
+
+    // Custom WebSocket event handlers and connection state
+    let customWebSocketConnectedHandler: () => void;
+    let customWebSocketDisconnectedHandler: () => void;
+    let customWebSocketIsConnected = false;
 
     function startWiFiMonitor(): void {
         if (wifiMonitorStarted) return;
@@ -387,9 +394,7 @@ namespace HUConnect {
         startWiFiMonitor();
     }
 
-    /** Send a diagnostic command and return the Wi-Fi module response as text.
-     * Supported commands depend on the firmware installed on the module.
-     */
+    /** Send a diagnostic command and return the Wi-Fi module response as text. */
     //% blockId=HUConnect_WiFiModuleCommand
     //% block="Wi-Fiモジュールに問い合わせる コマンド %command"
     //% command.defl="wifi_mac"
@@ -432,14 +437,31 @@ namespace HUConnect {
         wifiDisconnectedHandler = handler;
     }
 
-    /** Connect to a custom WebSocket server. Statement block; no value is returned. */
+    /** Connect to a custom WebSocket server. */
     //% blockId=HUConnect_ConnectCustomWebSocket
     //% block="カスタムWebSocketに接続 URL %url"
     //% url.defl="ws://172.20.10.5:8765"
     //% weight=70
     export function ConnectCustomWebSocket(url: string): void {
+        customWebSocketIsConnected = false;
+
         GroveWiFi.WsSecurity();
-        GroveWiFi.WsConnect(url);
+
+        if (GroveWiFi.WsConnect(url)) {
+            customWebSocketIsConnected = true;
+
+            if (customWebSocketConnectedHandler) {
+                customWebSocketConnectedHandler();
+            }
+        }
+    }
+
+    /** Run code when custom WebSocket connection succeeds. */
+    //% blockId=HUConnect_ConnectedCustomWebSocketSuccess
+    //% block="カスタムWebSocketに接続が成功したとき"
+    //% weight=69
+    export function ConnectedCustomWebSocketSuccess(handler: () => void): void {
+        customWebSocketConnectedHandler = handler;
     }
 
     /** Send a text message over the established WebSocket connection. */
@@ -459,7 +481,7 @@ namespace HUConnect {
         GroveWiFi.WsSend(value.toString());
     }
 
-    /** Return the raw response from a WebSocket connection attempt (diagnostic). */
+    /** Return the raw response from a WebSocket connection attempt. */
     //% blockId=HUConnect_CustomWebSocketDiagnostic
     //% block="get custom WebSocket response for URL %url"
     //% url.defl="ws://172.20.10.5:8765"
@@ -471,9 +493,26 @@ namespace HUConnect {
 
     /** Close the current WebSocket connection. */
     //% blockId=HUConnect_DisconnectCustomWebSocket
-    //% block="disconnect custom WebSocket"
+    //% block="カスタムWebSocketを切断"
     //% weight=40
     export function DisconnectCustomWebSocket(): void {
         GroveWiFi.WsClose();
+
+        if (customWebSocketIsConnected) {
+            customWebSocketIsConnected = false;
+
+            if (customWebSocketDisconnectedHandler) {
+                customWebSocketDisconnectedHandler();
+            }
+        }
     }
+
+    /** Run code when custom WebSocket is disconnected. */
+    //% blockId=HUConnect_DisconnectedCustomWebSocket
+    //% block="カスタムWebSocketが切断されたとき"
+    //% weight=39
+    export function DisconnectedCustomWebSocket(handler: () => void): void {
+        customWebSocketDisconnectedHandler = handler;
+    }
+
 }
